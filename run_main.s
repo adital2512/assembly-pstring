@@ -8,21 +8,20 @@ scan_str:    .string "%s"
 run_main:
     pushq %rbp
     movq %rsp, %rbp
-    pushq %r9
-    pushq %r8
-    pushq %r10
-    pushq $0x41
+    pushq %r12
+    pushq %r13
+    pushq %r14
     #calling scanf with 2 arguments
     #1. rdi = the scanf format
     movq $scan_int, %rdi
     #2. rsi = the address we scan into
     subq $256, %rsp #allocating 255 bytes for the string + 1 more for the len
+    andq $-16, %rsp
     movq %rsp, %rsi
     #make rax = 0 before calling function
     movq $0, %rax
     call scanf
-    movq $0, %r10
-    movb (%rsp), %r10b #save the length of pstr1
+
 
     #at this point, rsp is pointing to the len
     #we need to save the string 1 byte after the len
@@ -33,13 +32,15 @@ run_main:
     #make rax = 0 before calling function
     movq $0, %rax
     call scanf
-    #save the address of the first pstring in r9
-    mov %rsp, %r9
+    #save the address of the first pstring in r12
+    mov %rsp, %r12
     #puting \0 at the end of the string
-    subq %r10, %rsp
+    movq $0, %r14
+    movb (%r12), %r14b
+    addq %r14, %rsp
+    incq %rsp
     movb $0, (%rsp)
-    addq %r10, %rsp
-    addq $2, %rsp
+    movq %r12, %rsp
 
     #getting the second pstring
     #scanf the len with 2 arguments
@@ -47,13 +48,11 @@ run_main:
     movq $scan_int, %rdi
     #make space for new pstring
     subq $256, %rsp
+    andq $-16, %rsp
     #2. rsi = the address to save the data
     movq %rsp, %rsi
     #make rax = 0 before calling function
-    pushq $0x41
     call scanf
-    movq $0, %r10
-    movb (%rsp), %r10b #save the length of pstr1
 
     #at this point, rsp is pointing to the len
     #we need to save the string 1 byte after the len
@@ -64,18 +63,22 @@ run_main:
     #make rax = 0 before calling function
     movq $0, %rax
     call scanf
-    #save the address of the second pstring in r8
-    mov %rsp, %r8
+    #save the address of the second pstring in r13
+    mov %rsp, %r13
 
     #puting \0 at the end of the string
-    subq %r10, %rsp
+    movq $0, %r14
+    movb (%r13), %r14b
+    addq %r14, %rsp
+    incq %rsp
     movb $0, (%rsp)
-    addq %r10, %rsp
+    movq %r13, %rsp
 
 
     #getting the option from the table
     #make space for the scanf
     subq $16, %rsp
+    andq $-16, %rsp
     #calling scanf with 2 arguments
     #1. rdi = the scanf format
     movq $scan_int, %rdi
@@ -90,14 +93,17 @@ run_main:
     #calling the run_func function with 3 arguments
     #1. rdi = the choise from the table (already is)
     #2. rsi = the address of the first pstring
-    movq %r9, %rsi
+    movq %r12, %rsi
     #3. rdx = the address of the second pstring
-    movq %r8, %rdx
+    movq %r13, %rdx
+    movq $0, %rax
+
     call run_func
 
-    popq %r8
-    popq %r9
+    popq %r13
+    popq %r12
 
     movq %rbp, %rsp
     popq %rbp
     ret
+    
